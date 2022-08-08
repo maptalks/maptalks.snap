@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map - Display a map</title>
+<style type="text/css">
+    html,
+    body {
+        margin: 0px;
+        height: 100%;
+        width: 100%
+    }
+
+    .container {
+        width: 100%;
+        height: 100%
+    }
+</style>
+<link rel="stylesheet" href="https://unpkg.com/maptalks/dist/maptalks.css">
+<script type="text/javascript" src="./maptalks.js"></script>
+<script type="text/javascript" src="./../dist/maptalks-adsorption.js"></script>
+<script type="text/javascript" src="https://unpkg.com/gcoord@0.3.2/dist/gcoord.js"></script>
+
+<body>
+
+    <div id="map" class="container"></div>
+    <script src="./base.js"></script>
+    <script>
+        let editGeo;
+        fetch('./data.geojson').then(res => res.json()).then(geojson => {
+            const geos = maptalks.GeoJSON.toGeometry(geojson, function (geo) {
+                if (geo instanceof maptalks.Marker || geo instanceof maptalks.MultiPoint) {
+                    geo.setSymbol(markerSymbol);
+                }
+                if (geo instanceof maptalks.LineString || geo instanceof maptalks.MultiLineString) {
+                    geo.setSymbol(lineSymbol);
+                }
+                if (geo instanceof maptalks.Polygon || geo instanceof maptalks.MultiPolygon) {
+                    geo.setSymbol(fillSymbol);
+                }
+            });
+            layer.addGeometry(geos);
+            editGeo = geos.filter(geo => {
+                return geo.getProperties().name.includes('编辑');
+            })[0];
+            editGeo.startEdit({
+                vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
+                newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
+            });
+            adsorption.setGeometry(editGeo);
+        });
+
+        const layer1 = new maptalks.VectorLayer('layer1').addTo(map);
+        const fillSymbol1 = Object.assign({}, fillSymbol, { lineColor: '#F76400', polygonFill: "#F76400" });
+        fetch('./data2.geojson').then(res => res.json()).then(geojson => {
+            const geos = maptalks.GeoJSON.toGeometry(geojson, function (geo) {
+                if (geo instanceof maptalks.Polygon || geo instanceof maptalks.MultiPolygon) {
+                    geo.setSymbol(fillSymbol1);
+                }
+            });
+            layer1.addGeometry(geos);
+
+        });
+
+        adsorption.config({
+            tolerance: 15,
+            fiterGeometries: () => {
+                const geos1 = layer.getGeometries().filter(geo => {
+                    return geo.getType().includes('Polygon');
+                });
+                const geos2 = layer1.getGeometries().filter(geo => {
+                    return geo.getType().includes('Polygon');
+                });
+                return [...geos1, ...geos2];
+            }
+        })
+
+
+
+    </script>
+</body>
+
+</html>

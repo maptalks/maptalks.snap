@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map - Display a map</title>
+<style type="text/css">
+    html,
+    body {
+        margin: 0px;
+        height: 100%;
+        width: 100%
+    }
+
+    .container {
+        width: 100%;
+        height: 100%
+    }
+</style>
+<link rel="stylesheet" href="https://unpkg.com/maptalks/dist/maptalks.css">
+<script type="text/javascript" src="./maptalks.js"></script>
+<script type="text/javascript" src="https://unpkg.com/@maptalks/gl/dist/maptalksgl.js"></script>
+<script type="text/javascript" src="https://unpkg.com/@maptalks/vt@0.73.0/dist/maptalks.vt.js"></script>
+<script type="text/javascript" src="./../dist/maptalks-adsorption.js"></script>
+<script type="text/javascript" src="https://unpkg.com/gcoord@0.3.2/dist/gcoord.js"></script>
+<script type="text/javascript" src="https://maptalks.org/maptalks.three/demo/buildings.js"></script>
+
+<body>
+
+    <div id="map" class="container"></div>
+    <script src="./base.js"></script>
+    <script>
+
+        const polygonLayer = new maptalks.PolygonLayer('polylalyer').addTo(map);
+        // features to draw
+        var features = [];
+
+        buildings.forEach(function (b) {
+            features = features.concat(b.features);
+        });
+        const polygons = features.map(f => {
+            return maptalks.GeoJSON.toGeometry(f, (geo) => {
+                geo.setId(maptalks.Util.GUID())
+                geo.setSymbol(fillSymbol);
+            })
+        });
+        polygonLayer.addGeometry(polygons.slice(1, Infinity));
+        map.setCenter(polygons[0].getCenter()).setZoom(20);
+
+        layer.addGeometry(polygons[0]);
+        editGeo = polygons[0];
+        editGeo.startEdit({
+            vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
+            newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
+        });
+        adsorption.setGeometry(editGeo);
+        adsorption.config({
+            tolerance: 15,
+            fiterGeometries: () => {
+                return polygonLayer.getGeometries();
+            }
+        })
+
+    </script>
+</body>
+
+</html>
