@@ -3,6 +3,7 @@
 const map = new maptalks.Map('map', {
     center: [116.476284, 40.000917],
     zoom: 17.5,
+    zoomControl: true,
     baseLayer: new maptalks.TileLayer('base', {
         offset: function (z) {
             const map = this.getMap();
