@@ -102,9 +102,7 @@ export class Adsorption extends maptalks.Class {
             }
             if (!geometries || geometries.length === 0) {
                 const layer = this.geometry.getLayer();
-                geometries = layer.getGeometries().filter(geo => {
-                    return geo !== this.geometry;
-                });
+                geometries = layer.getGeometries();
             }
             return this._nearest(geometries, handleConatainerPoint);
         };
@@ -169,6 +167,7 @@ export class Adsorption extends maptalks.Class {
             if (isNearest(point)) {
                 return point.copy();
             }
+            return;
         }
 
         const nearestRing = (ring) => {
@@ -212,6 +211,7 @@ export class Adsorption extends maptalks.Class {
             if (point) {
                 return point.copy();
             }
+            return;
         }
         if (geometry instanceof maptalks.Polygon) {
             for (let i = 0, len = coordinates.length; i < len; i++) {
