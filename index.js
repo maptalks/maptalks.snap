@@ -22,11 +22,15 @@ function getShortestPointInLine(line, p) {
     const dy = p2[1] - p1[1];
     const cross = dx * (p[0] - p1[0]) + dy * (p[1] - p1[1]);
     if (cross <= 0) {
-        return p1;
+        TEMP_POINT.x = p1[0];
+        TEMP_POINT.y = p1[1];
+        return TEMP_POINT;
     }
     const d2 = dx * dx + dy * dy;
     if (cross >= d2) {
-        return p2;
+        TEMP_POINT.x = p2[0];
+        TEMP_POINT.y = p2[1];
+        return TEMP_POINT;
     }
     // 垂足
     const u = cross / d2;
@@ -171,8 +175,11 @@ export class Adsorption extends maptalks.Class {
         }
 
         const nearestRing = (ring) => {
+            if (!ring || ring.length < 2) {
+                return;
+            }
             const bbox = ringBBOX(ring, map, tolerance);
-            const { x, y } = handleConatainerPoint;
+            const x = handleConatainerPoint.x, y = handleConatainerPoint.y;
             if (x < bbox.xmin || y < bbox.ymin || x > bbox.xmax || y > bbox.ymax) {
                 return;
             }
