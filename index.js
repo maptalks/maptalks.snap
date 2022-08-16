@@ -1,7 +1,7 @@
 import * as maptalks from 'maptalks';
 
 const options = {
-    // adsorb threshold
+    // snapTo threshold
     tolerance: 15,
     // filter geometries for get Adsorption reference object
     fiterGeometries: null
@@ -95,7 +95,7 @@ export class Adsorption extends maptalks.Class {
         this.removeGeometry();
         this.geometry = geometry;
 
-        const adsorb = (handleConatainerPoint) => {
+        const snapTo = (handleConatainerPoint) => {
             if (!handleConatainerPoint) {
                 return;
             }
@@ -111,13 +111,13 @@ export class Adsorption extends maptalks.Class {
             return this._nearest(geometries, handleConatainerPoint);
         };
         // bind adsort function
-        this.geometry.adsorb = adsorb;
+        this.geometry.snapTo = snapTo;
         return this;
     }
 
     removeGeometry() {
         if (this.geometry) {
-            delete this.geometry.adsorb;
+            delete this.geometry.snapTo;
         }
         delete this.geometry;
         return this;
