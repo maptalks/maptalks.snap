@@ -46,7 +46,7 @@ const fillSymbol = Object.assign({}, lineSymbol, {
 const drawSymbol = Object.assign({}, fillSymbol, { lineColor: 'red' });
 
 const layer = new maptalks.VectorLayer('layer').addTo(map);
-const adsorption = new maptalks.Adsorption(map);
+const snap = new maptalks.Snap(map);
 
 function toGeoJSON() {
     const geometries = layer.getGeometries();

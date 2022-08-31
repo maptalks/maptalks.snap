@@ -19,8 +19,8 @@
 <link rel="stylesheet" href="https://unpkg.com/maptalks/dist/maptalks.css">
 <script type="text/javascript" src="./maptalks.js"></script>
 <script type="text/javascript" src="https://unpkg.com/@maptalks/gl/dist/maptalksgl.js"></script>
-<script type="text/javascript" src="https://unpkg.com/@maptalks/vt@0.73.0/dist/maptalks.vt.js"></script>
-<script type="text/javascript" src="./../dist/maptalks-adsorption.js"></script>
+<script type="text/javascript" src="https://unpkg.com/@maptalks/vt/dist/maptalks.vt.js"></script>
+<script type="text/javascript" src="./../dist/maptalks.snap.js"></script>
 <script type="text/javascript" src="https://unpkg.com/gcoord@0.3.2/dist/gcoord.js"></script>
 <script type="text/javascript" src="https://maptalks.org/maptalks.three/demo/buildings.js"></script>
 
@@ -52,8 +52,8 @@
             vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
             newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
         });
-        adsorption.setGeometry(editGeo);
-        adsorption.config({
+        snap.setGeometry(editGeo);
+        snap.config({
             tolerance: 15,
             fiterGeometries: () => {
                 return polygonLayer.getGeometries();

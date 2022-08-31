@@ -1,9 +1,9 @@
 {
-  "name": "maptalks-adsorption",
+  "name": "maptalks.snap",
   "version": "0.0.1",
   "description": "",
   "module": "./index.js",
-  "main": "dist/maptalks-adsorbent.js",
+  "main": "dist/maptalks.snap.js",
   "scripts": {
     "lint": "eslint ./*.js",
     "build": "npm run lint && cross-env NODE_ENV=dev  rollup -c",

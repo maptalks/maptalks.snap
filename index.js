@@ -1,7 +1,7 @@
 import * as maptalks from 'maptalks';
 
 const options = {
-    // adsorb threshold
+    // snapTo threshold
     tolerance: 15,
     // filter geometries for get Adsorption reference object
     fiterGeometries: null
@@ -22,11 +22,15 @@ function getShortestPointInLine(line, p) {
     const dy = p2[1] - p1[1];
     const cross = dx * (p[0] - p1[0]) + dy * (p[1] - p1[1]);
     if (cross <= 0) {
-        return p1;
+        TEMP_POINT.x = p1[0];
+        TEMP_POINT.y = p1[1];
+        return TEMP_POINT;
     }
     const d2 = dx * dx + dy * dy;
     if (cross >= d2) {
-        return p2;
+        TEMP_POINT.x = p2[0];
+        TEMP_POINT.y = p2[1];
+        return TEMP_POINT;
     }
     // 垂足
     const u = cross / d2;
@@ -70,7 +74,7 @@ function ringBBOX(ring, map, tolerance) {
     return TEMP_EXTENT;
 }
 
-export class Adsorption extends maptalks.Class {
+export class Snap extends maptalks.Class {
     constructor(map, options) {
         super(options);
         this.map = map;
@@ -91,7 +95,7 @@ export class Adsorption extends maptalks.Class {
         this.removeGeometry();
         this.geometry = geometry;
 
-        const adsorb = (handleConatainerPoint) => {
+        const snapTo = (handleConatainerPoint) => {
             if (!handleConatainerPoint) {
                 return;
             }
@@ -102,20 +106,18 @@ export class Adsorption extends maptalks.Class {
             }
             if (!geometries || geometries.length === 0) {
                 const layer = this.geometry.getLayer();
-                geometries = layer.getGeometries().filter(geo => {
-                    return geo !== this.geometry;
-                });
+                geometries = layer.getGeometries();
             }
             return this._nearest(geometries, handleConatainerPoint);
         };
         // bind adsort function
-        this.geometry.adsorb = adsorb;
+        this.geometry.snapTo = snapTo;
         return this;
     }
 
     removeGeometry() {
         if (this.geometry) {
-            delete this.geometry.adsorb;
+            delete this.geometry.snapTo;
         }
         delete this.geometry;
         return this;
@@ -169,11 +171,15 @@ export class Adsorption extends maptalks.Class {
             if (isNearest(point)) {
                 return point.copy();
             }
+            return;
         }
 
         const nearestRing = (ring) => {
+            if (!ring || ring.length < 2) {
+                return;
+            }
             const bbox = ringBBOX(ring, map, tolerance);
-            const { x, y } = handleConatainerPoint;
+            const x = handleConatainerPoint.x, y = handleConatainerPoint.y;
             if (x < bbox.xmin || y < bbox.ymin || x > bbox.xmax || y > bbox.ymax) {
                 return;
             }
@@ -212,6 +218,7 @@ export class Adsorption extends maptalks.Class {
             if (point) {
                 return point.copy();
             }
+            return;
         }
         if (geometry instanceof maptalks.Polygon) {
             for (let i = 0, len = coordinates.length; i < len; i++) {
@@ -239,4 +246,4 @@ export class Adsorption extends maptalks.Class {
     }
 
 }
-Adsorption.mergeOptions(options);
+Snap.mergeOptions(options);

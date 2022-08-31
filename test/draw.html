@@ -18,7 +18,7 @@
 </style>
 <link rel="stylesheet" href="https://unpkg.com/maptalks/dist/maptalks.css">
 <script type="text/javascript" src="./maptalks.js"></script>
-<script type="text/javascript" src="./../dist/maptalks-adsorption.js"></script>
+<script type="text/javascript" src="./../dist/maptalks.snap.js"></script>
 <script type="text/javascript" src="https://unpkg.com/gcoord@0.3.2/dist/gcoord.js"></script>
 
 <body>
@@ -53,8 +53,8 @@
         });
         drawTool.on('drawstart', function (param) {
             console.log('reset geometry');
-            adsorption.setGeometry(param.tempGeometry);
-            adsorption.config({
+            snap.setGeometry(param.tempGeometry);
+            snap.config({
                 fiterGeometries: () => {
                     return layer.getGeometries();
                 }
