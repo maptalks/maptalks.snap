@@ -74,7 +74,7 @@ function ringBBOX(ring, map, tolerance) {
     return TEMP_EXTENT;
 }
 
-export class Adsorption extends maptalks.Class {
+export class Snap extends maptalks.Class {
     constructor(map, options) {
         super(options);
         this.map = map;
@@ -246,4 +246,4 @@ export class Adsorption extends maptalks.Class {
     }
 
 }
-Adsorption.mergeOptions(options);
+Snap.mergeOptions(options);
