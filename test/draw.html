@@ -28,7 +28,7 @@
 
 <body>
     <div class="message">
-        polygon,linestring snap
+        draw tempGeometry snap
     </div>
     <div id="map" class="container"></div>
     <script src="./base.js"></script>
@@ -49,6 +49,8 @@
             layer.addGeometry(geos);
         });
 
+        const layer1 = new maptalks.VectorLayer('layer1').addTo(map);
+
         var drawTool = new maptalks.DrawTool({
             mode: 'LineString',
             'symbol': drawSymbol,
@@ -56,14 +58,14 @@
 
         drawTool.on('drawend', function (param) {
             // console.log(param.geometry);
-            layer.addGeometry(param.geometry);
+            layer1.addGeometry(param.geometry);
         });
         drawTool.on('drawstart', function (param) {
             console.log('reset geometry');
             snap.effectGeometry(param.tempGeometry);
             snap.config({
                 fiterGeometries: () => {
-                    return layer.getGeometries();
+                    return layer.getGeometries().concat(layer1.getGeometries());
                 }
             })
         });
@@ -92,7 +94,7 @@
                 {
                     item: 'Clear',
                     click: function () {
-                        layer.clear();
+                        layer1.clear();
                     }
                 }
             ]
