@@ -1,8 +1,8 @@
-# maptalks-adsorbent
+# maptalks.snap
 
 ## examples
- [edit](https://deyihu.github.io/maptalks-adsorption/test/index.html)<br>
- [draw](https://deyihu.github.io/maptalks-adsorption/test/draw.html)<br>
- [custom filtergeometries](https://deyihu.github.io/maptalks-adsorption/test/filtergeometries.html)<br>
- [filtergeometries from multi layers](https://deyihu.github.io/maptalks-adsorption/test/multilayerfilter.html)<br>
- [perf test](https://deyihu.github.io/maptalks-adsorption/test/perf.html)
+ [edit](https://maptalks.github.io/maptalks.snap/test/index.html)<br>
+ [draw](https://maptalks.github.io/maptalks.snap/test/draw.html)<br>
+ [custom filtergeometries](https://maptalks.github.io/maptalks.snap/test/filtergeometries.html)<br>
+ [filtergeometries from multi layers](https://maptalks.github.io/maptalks.snap/test/multilayerfilter.html)<br>
+ [perf test](https://maptalks.github.io/maptalks.snap/test/perf.html)
