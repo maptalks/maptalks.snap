@@ -20,7 +20,7 @@ maptalks snap plugin
 * CDN
 
 ```html
-
+<script src="https://unpkg.com/maptalks.snap/dist/maptalks.snap.js"></script>
 ```
 
 ## Examples
@@ -34,8 +34,6 @@ maptalks snap plugin
  ## API
 
 #### constructor(map, options)
-
-   
 
 ```js
 import {
@@ -54,17 +52,17 @@ const snap = new Snap(map, {
 });
 
 //if you use cdn,Snap Hanging under maptalks namespace
-const snap = new maptalks.Snap(map, {
-    //snapTo threshold
-    tolerance: 15,
-    // filter geometries for get Adsorption reference object
-    fiterGeometries: function() {
-        //you can return geometries for snap collision
-        return layer.geometries().filter(geo => {
-            return geo instanceof maptalks.Polygon;
-        })
-    }
-});
+// const snap = new maptalks.Snap(map, {
+//     //snapTo threshold
+//     tolerance: 15,
+//     // filter geometries for get Adsorption reference object
+//     fiterGeometries: function() {
+//         //you can return geometries for snap collision
+//         return layer.geometries().filter(geo => {
+//             return geo instanceof maptalks.Polygon;
+//         })
+//     }
+// });
 
 //update options
 snap.config({
@@ -78,20 +76,20 @@ snap.config({
 
 #### method
 
-  + setGeometry(geometry) ` set geometry for snap`  
+  + effectGeometry(geometry) ` effect geometry for snap`  
   
 
 ```js
-snap.setGeometry(polygon);
-//will remove polygon snap,and snap to linestring
-snap.setGeometry(lineString);
+snap.effectGeometry(polygon);
+snap.effectGeometry(lineString);
 ```
 
-  + removeGeometry() `remove geometry snap behavior`
+  + unEffectGeometry(geometry) `remove geometry snap behavior`
   
 
 ```js
-snap.removeGeometry();
+snap.unEffectGeometry(polygon);
+snap.unEffectGeometry(lineString);
 ```
 
   + dispose() `dispose Snap`
