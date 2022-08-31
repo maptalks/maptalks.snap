@@ -1852,7 +1852,7 @@
 
     return result;
   }
-  var CONTENT_EXPRE = /\{([\w_]+)\}/g;
+  var CONTENT_EXPRE = /{([\u0000-\u0019\u0021-\uFFFF]+)}/g;
   function replaceVariable(str, props) {
     if (!isString(str)) {
       return str;
@@ -2436,6 +2436,7 @@
       var hit = listensDomEvent(obj, type, handler);
 
       if (hit >= 0) {
+        console.warn(obj, "find '" + type + "' handler:", handler, ' The old listener function will be removed');
         removeDomEvent(obj, type, handler);
       }
 
@@ -4429,6 +4430,7 @@
           if (l > 0) {
             for (var i = 0; i < l; i++) {
               if (handler === handlerChain[i].handler && handlerChain[i].context === context) {
+                console.warn(this, "find '" + eventsOn + "' handler:", handler, ' The old listener function will be removed');
                 return this;
               }
             }
@@ -5646,10 +5648,13 @@
       delete this.moved;
       var actual = event.touches ? event.touches[0] : event;
       this.startPos = new Point(actual.clientX, actual.clientY);
+      off(document, MOVE_EVENTS[event.type], this.onMouseMove, this);
+      off(document, END_EVENTS[event.type], this.onMouseUp, this);
       on(document, MOVE_EVENTS[event.type], this.onMouseMove, this);
       on(document, END_EVENTS[event.type], this.onMouseUp, this);
 
       if (!this.options['ignoreMouseleave']) {
+        off(this.dom, 'mouseleave', this.onMouseUp, this);
         on(this.dom, 'mouseleave', this.onMouseUp, this);
       }
 
@@ -11655,6 +11660,7 @@
     'interactive': true,
     'editable': true,
     'cursor': null,
+    'antiMeridian': false,
     'defaultProjection': 'EPSG:4326'
   };
 
@@ -15031,6 +15037,36 @@
       }
     };
 
+    _proto._fixPrjOnWorldWide = function _fixPrjOnWorldWide(prjCoord) {
+      var projection = this.getProjection();
+
+      if (projection && projection.fullExtent && prjCoord) {
+        var _ref = projection.fullExtent || {},
+            left = _ref.left,
+            bottom = _ref.bottom,
+            top = _ref.top,
+            right = _ref.right;
+
+        if (isNumber(left)) {
+          prjCoord.x = Math.max(left, prjCoord.x);
+        }
+
+        if (isNumber(right)) {
+          prjCoord.x = Math.min(right, prjCoord.x);
+        }
+
+        if (isNumber(bottom)) {
+          prjCoord.y = Math.max(bottom, prjCoord.y);
+        }
+
+        if (isNumber(top)) {
+          prjCoord.y = Math.min(top, prjCoord.y);
+        }
+      }
+
+      return this;
+    };
+
     return Map;
   }(Handlerable(Eventable(Renderable(Class))));
 
@@ -15310,13 +15346,13 @@
             max2d = extent2D.getMax();
         var fullExtent = this.getFullExtent();
 
-        var _ref = !fullExtent || fullExtent.left <= fullExtent.right ? [min2d.x, max2d.x] : [max2d.x, min2d.x],
-            minx = _ref[0],
-            maxx = _ref[1];
+        var _ref2 = !fullExtent || fullExtent.left <= fullExtent.right ? [min2d.x, max2d.x] : [max2d.x, min2d.x],
+            minx = _ref2[0],
+            maxx = _ref2[1];
 
-        var _ref2 = !fullExtent || fullExtent.top > fullExtent.bottom ? [max2d.y, min2d.y] : [min2d.y, max2d.y],
-            miny = _ref2[0],
-            maxy = _ref2[1];
+        var _ref3 = !fullExtent || fullExtent.top > fullExtent.bottom ? [max2d.y, min2d.y] : [min2d.y, max2d.y],
+            miny = _ref3[0],
+            maxy = _ref3[1];
 
         var min = min2d.set(minx, maxy);
         var max = max2d.set(maxx, miny);
@@ -15581,6 +15617,9 @@
         t = 5 * t;
         var dscale = isTouch ? 5 : 2.8;
         var targetPrjCoord = currentCenter.add(dxy._multi(dscale));
+
+        map._fixPrjOnWorldWide(targetPrjCoord);
+
         var targetCoord = map.getProjection().unproject(targetPrjCoord);
         map.panTo(targetCoord, {
           'duration': isTouch ? t * 3 : t * 2,
@@ -18292,10 +18331,12 @@
         return false;
       }
 
+      delete this._pickGeometryIndex;
       var geometries = this.getGeometries();
 
       for (var i = 0, l = geometries.length; i < l; i++) {
         if (geometries[i]._containsPoint(point, t)) {
+          this._pickGeometryIndex = i;
           return true;
         }
       }
@@ -18368,6 +18409,28 @@
         'type': 'GeometryCollection',
         'geometries': children
       };
+    };
+
+    _proto._toJSON = function _toJSON(options) {
+      var feature = {
+        'type': 'Feature',
+        'geometry': {
+          'type': 'GeometryCollection',
+          'geometries': this.getGeometries().filter(function (geo) {
+            return geo && geo._toJSON;
+          }).map(function (geo) {
+            var json = geo._toJSON();
+
+            if (json.subType) {
+              return json;
+            }
+
+            return geo._exportGeoJSONGeometry();
+          })
+        }
+      };
+      options.feature = feature;
+      return options;
     };
 
     _proto._clearProjection = function _clearProjection() {
@@ -18581,6 +18644,12 @@
       };
     };
 
+    _proto._toJSON = function _toJSON(options) {
+      return {
+        'feature': this.toGeoJSON(options)
+      };
+    };
+
     return MultiGeometry;
   }(GeometryCollection);
 
@@ -18773,7 +18842,11 @@
         var size = geometries.length;
 
         for (var i = 0; i < size; i++) {
-          mGeos.push(GeoJSON._convert(geometries[i]));
+          if (geometries[i].subType) {
+            mGeos.push(Geometry.getJSONClass(geometries[i].subType).fromJSON(geometries[i]));
+          } else {
+            mGeos.push(GeoJSON._convert(geometries[i]));
+          }
         }
 
         var _result = new GeometryCollection(mGeos);
@@ -21806,10 +21879,10 @@
       } else {
         var _prjCoord = this.getMap()._pointToPrj(event['point2d']);
 
-        var adsorb = this._geometry.adsorb;
+        var snapTo = this._geometry.snapTo;
 
-        if (adsorb && isFunction(adsorb)) {
-          var containerPoint = this._geometry.adsorb(event.containerPoint) || event.containerPoint;
+        if (snapTo && isFunction(snapTo)) {
+          var containerPoint = this._geometry.snapTo(event.containerPoint) || event.containerPoint;
           _prjCoord = this.getMap()._containerPointToPrj(containerPoint);
         }
 
@@ -21880,8 +21953,8 @@
 
       var prjCoord = this.getMap()._pointToPrj(event['point2d']);
 
-      if (this._geometry.adsorb) {
-        containerPoint = this._geometry.adsorb(containerPoint) || containerPoint;
+      if (this._geometry.snapTo) {
+        containerPoint = this._geometry.snapTo(containerPoint) || containerPoint;
         prjCoord = map._containerPointToPrj(containerPoint);
       }
 
@@ -22864,6 +22937,23 @@
       var eventParam = this._parseEvent(e, type);
 
       this._fireEvent(type, eventParam);
+    },
+    _getEventParams: function _getEventParams(e) {
+      var map = this;
+      var eventParam = {
+        'domEvent': e
+      };
+      var actual = e.touches && e.touches.length > 0 ? e.touches[0] : e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e;
+
+      if (actual) {
+        var containerPoint = getEventContainerPoint(actual, map._containerDOM);
+        eventParam['coordinate'] = map.containerPointToCoordinate(containerPoint);
+        eventParam['containerPoint'] = containerPoint;
+        eventParam['viewPoint'] = map.containerPointToViewPoint(containerPoint);
+        eventParam['pont2d'] = map._containerPointToPoint(containerPoint);
+      }
+
+      return eventParam;
     }
   });
   Map$1.addOnLoadHook('_registerDomEvents');
@@ -25063,9 +25153,6 @@
       var _this;
 
       _this = _DistanceTool.call(this, options) || this;
-
-      _this.on('enable', _this._afterEnable, _assertThisInitialized(_this)).on('disable', _this._afterDisable, _assertThisInitialized(_this));
-
       _this._measureLayers = [];
       return _this;
     }
@@ -26223,10 +26310,14 @@
         left = -(containerPoint.x + domWidth - mapWidth) - margin;
       }
 
-      if (containerPoint.y < 0) {
-        top = -containerPoint.y + margin;
+      if (containerPoint.y - domHeight < 0) {
+        top = Math.abs(containerPoint.y - domHeight) + margin;
       } else if (containerPoint.y + domHeight > mapHeight) {
         top = mapHeight - (containerPoint.y + domHeight) - margin;
+      }
+
+      if (domWidth >= mapWidth) {
+        left = mapWidth / 2 - containerPoint0.x;
       }
 
       if (top !== 0 || left !== 0) {
@@ -26244,12 +26335,17 @@
       var container = this._getUIContainer();
 
       dom.style.position = 'absolute';
-      dom.style.left = -99999 + 'px';
       var anchor = dom.style.bottom ? 'bottom' : 'top';
-      dom.style[anchor] = -99999 + 'px';
       dom.style.display = '';
       container.appendChild(dom);
-      this._size = new Size(dom.clientWidth, dom.clientHeight);
+
+      if (dom.getBoundingClientRect) {
+        var rect = dom.getBoundingClientRect();
+        this._size = new Size(rect.width, rect.height);
+      } else {
+        this._size = new Size(dom.clientWidth, dom.clientHeight);
+      }
+
       dom.style.display = 'none';
       dom.style.left = '0px';
       dom.style[anchor] = '0px';
@@ -26372,7 +26468,7 @@
 
       if (this._owner && this._owner instanceof Geometry) {
         events.positionchange = this.onGeometryPositionChange;
-        events.symbolchange = this.onGeometryPositionChange;
+        events.symbolchange = this._updatePosition;
       }
 
       if (this.getOwnerEvents) {
@@ -26421,9 +26517,14 @@
     };
 
     _proto._updatePosition = function _updatePosition() {
+      if (!this.getMap()) {
+        return this;
+      }
+
       var renderer = this.getMap()._getRenderer();
 
       renderer.callInNextFrame(this._setPosition.bind(this));
+      return this;
     };
 
     _proto._setPosition = function _setPosition() {
@@ -26662,7 +26763,21 @@
         return;
       }
 
+      if (type === 'touchstart') {
+        this._touchstartTime = now();
+      }
+
       this.fire(e.type, event);
+
+      if (type === 'touchend' && Browser$1.touch) {
+        var clickTimeThreshold = this.getMap().options.clickTimeThreshold || 280;
+
+        if (now() - this._touchstartTime < clickTimeThreshold) {
+          this._onDomEvents(extend({}, e, {
+            type: 'click'
+          }));
+        }
+      }
     };
 
     _proto._removeDOMEvents = function _removeDOMEvents(dom) {
@@ -28409,7 +28524,16 @@
 
     _proto._getPerspectiveCoords = function _getPerspectiveCoords() {
       var map = this.getMap();
+      var projection = map.getProjection();
       return map.getContainerExtent().toArray().map(function (c) {
+        if (projection) {
+          var prjCoord = map._containerPointToPrj(c);
+
+          map._fixPrjOnWorldWide(prjCoord);
+
+          return projection.unproject(prjCoord);
+        }
+
         return map.containerPointToCoordinate(c);
       });
     };
@@ -29837,7 +29961,8 @@
       var renderer = parentRenderer || this.getRenderer();
       var hasCurrentIn = false;
       var children = [];
-      var glScale = sr.getResolution(z) / glRes;
+      var res = sr.getResolution(z);
+      var glScale = res / glRes;
 
       for (var i = 0; i < 4; i++) {
         var dx = i % 2;
@@ -29875,6 +30000,7 @@
             z: z,
             extent2d: extent,
             error: node.error / 2,
+            res: res,
             id: tileId,
             url: this.getTileUrl(childX, childY, z + this.options['zoomOffset']),
             offset: offset
@@ -30401,6 +30527,7 @@
                   'extent2d': tileExtent,
                   'offset': offset,
                   'id': tileId,
+                  'res': res,
                   'url': this.getTileUrl(idx.x, idx.y, z)
                 };
 
@@ -30856,7 +30983,7 @@
       for (var i = 0, l = layers.length; i < l; i++) {
         var layer = layers[i];
 
-        if (!layer.options['visible'] || !layer.getMap()) {
+        if (!layer || !layer.options['visible'] || !layer.isVisible() || !layer.getMap()) {
           continue;
         }
 
@@ -31313,16 +31440,17 @@
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         if (debug) {
-          this.drawDebug(uMatrix, v2, 0, 0, w, h, debug);
+          this.drawDebug(uMatrix, 0, 0, w, h, debug);
         }
       };
 
-      _proto.drawDebug = function drawDebug(uMatrix, attrib, x, y, w, h, debugInfo) {
+      _proto.drawDebug = function drawDebug(uMatrix, x, y, w, h, debugInfo) {
         var gl = this.gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, this._debugBuffer);
         this.enableVertexAttrib(['a_position', 2, 'FLOAT']);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([x, y, x + w, y, x + w, y - h, x, y - h, x, y]), gl.DYNAMIC_DRAW);
         gl.uniformMatrix4fv(this.program['u_matrix'], false, uMatrix);
+        gl.uniform1f(this.program['u_opacity'], 1);
         gl.uniform1f(this.program['u_debug_line'], 1);
         gl.drawArrays(gl.LINE_STRIP, 0, 5);
         var canvas = this._debugInfoCanvas;
@@ -31347,10 +31475,9 @@
         this.loadTexture(canvas);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
         w = 256;
-        h = 32;
         var x1 = x;
         var x2 = x + w;
-        var y1 = y;
+        var y1 = y - h + 32;
         var y2 = y - h;
         gl.bufferData(gl.ARRAY_BUFFER, this.set8(x1, y1, x1, y2, x2, y1, x2, y2), gl.DYNAMIC_DRAW);
         gl.uniform1f(this.program['u_debug_line'], 0);
@@ -33577,10 +33704,10 @@
           ringIndex = 0;
         }
 
-        var adsorb = me._geometry.adsorb;
+        var snapTo = me._geometry.snapTo;
 
-        if (adsorb && isFunction(adsorb)) {
-          handleConatainerPoint = me._geometry.adsorb(handleConatainerPoint) || handleConatainerPoint;
+        if (snapTo && isFunction(snapTo)) {
+          handleConatainerPoint = me._geometry.snapTo(handleConatainerPoint) || handleConatainerPoint;
         }
 
         var vertice = getVertexPrjCoordinates(ringIndex);
@@ -34767,7 +34894,9 @@
 
   Geometry.include({
     _onEvent: function _onEvent(event, type) {
-      if (!this.getMap()) {
+      var map = this.getMap();
+
+      if (!map) {
         return;
       }
 
@@ -34778,29 +34907,16 @@
         preventDefault(event);
       }
 
-      var params = this._getEventParams(event);
+      var params = map._getEventParams(event);
+
+      if (isNumber(this._pickGeometryIndex)) {
+        params.pickGeometryIndex = this._pickGeometryIndex;
+      }
 
       this._fireEvent(eventType, params);
     },
     _getEventTypeToFire: function _getEventTypeToFire(domEvent) {
       return domEvent.type;
-    },
-    _getEventParams: function _getEventParams(e) {
-      var map = this.getMap();
-      var eventParam = {
-        'domEvent': e
-      };
-      var actual = e.touches && e.touches.length > 0 ? e.touches[0] : e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e;
-
-      if (actual) {
-        var containerPoint = getEventContainerPoint(actual, map._containerDOM);
-        eventParam['coordinate'] = map.containerPointToCoordinate(containerPoint);
-        eventParam['containerPoint'] = containerPoint;
-        eventParam['viewPoint'] = map.containerPointToViewPoint(containerPoint);
-        eventParam['pont2d'] = map._containerPointToPoint(containerPoint);
-      }
-
-      return eventParam;
     }
   });
 
@@ -35520,9 +35636,10 @@
           h += 0.1;
         }
 
-        if (zoom !== tileZoom) {
-          var scale = map._getResolution(tileZoom) / map._getResolution();
+        var res = map._getResolution();
 
+        if (res !== tileInfo.res) {
+          var scale = tileInfo.res / res;
           ctx.scale(scale, scale);
         }
 
@@ -35545,7 +35662,7 @@
           width: w,
           height: h
         }, 1, 0);
-        Canvas.fillText(ctx, this.getDebugInfo(tileId), _point._add(10, 20), color);
+        Canvas.fillText(ctx, this.getDebugInfo(tileId), _point._add(32, h - 14), color);
         Canvas.drawCross(ctx, x + w / 2, y + h / 2, 2, color);
         ctx.restore();
       }
@@ -35908,7 +36025,7 @@
         return;
       }
 
-      var scale = tileInfo._glScale = tileInfo._glScale || map.getGLScale(tileInfo.z);
+      var scale = tileInfo._glScale = tileInfo._glScale || tileInfo.res / map.getGLRes();
       var w = tileInfo.extent2d.xmax - tileInfo.extent2d.xmin;
       var h = tileInfo.extent2d.ymax - tileInfo.extent2d.ymin;
 
@@ -38569,4 +38686,3 @@
   typeof console !== 'undefined' && console.log && console.log('maptalks v1.0.0-rc.10');
 
 }));
-//# sourceMappingURL=maptalks.js.map
