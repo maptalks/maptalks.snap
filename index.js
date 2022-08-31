@@ -79,6 +79,7 @@ export class Snap extends maptalks.Class {
         super(options);
         this.map = map;
         this._mousePoint = null;
+        this._geometries = [];
         this.map.on('mousemove', this._mouseMove, this);
     }
 
@@ -91,50 +92,61 @@ export class Snap extends maptalks.Class {
         return (this._mousePoint && this._mousePoint.distanceTo(point) <= this.options.tolerance + 5);
     }
 
-    setGeometry(geometry) {
-        this.removeGeometry();
-        this.geometry = geometry;
+    effectGeometry(geometry) {
+        if (this._geometries.indexOf(geometry) > -1) {
+            return this;
+        }
+        this._geometries.push(geometry);
+        const self = this;
 
-        const snapTo = (handleConatainerPoint) => {
+        const snapTo = function (handleConatainerPoint) {
             if (!handleConatainerPoint) {
                 return;
             }
             let geometries;
-            const fiterGeometries = this.options.fiterGeometries;
+            const fiterGeometries = self.options.fiterGeometries;
             if (fiterGeometries && maptalks.Util.isFunction(fiterGeometries)) {
                 geometries = fiterGeometries();
             }
-            if (!geometries || geometries.length === 0) {
-                const layer = this.geometry.getLayer();
-                geometries = layer.getGeometries();
+            if (!geometries || !geometries.length) {
+                const layer = this.getLayer();
+                if (layer) {
+                    geometries = layer.getGeometries();
+                }
             }
-            return this._nearest(geometries, handleConatainerPoint);
+            return self._nearest(geometries, handleConatainerPoint, this);
         };
         // bind adsort function
-        this.geometry.snapTo = snapTo;
+        geometry.snapTo = snapTo;
         return this;
     }
 
-    removeGeometry() {
-        if (this.geometry) {
-            delete this.geometry.snapTo;
+    unEffectGeometry(geometry) {
+        const index = this._geometries.indexOf(geometry);
+        if (index === -1) {
+            return this;
         }
-        delete this.geometry;
+        this._geometries.splice(index, 1);
+        delete geometry.snapTo;
         return this;
     }
 
     dispose() {
-        this.removeGeometry();
+        this._geometries.forEach(geometry => {
+            this.unEffectGeometry(geometry);
+        });
         this.map.off('mousemove', this._mouseMove, this);
         delete this.map;
         delete this._mousePoint;
+        delete this._geometries;
     }
 
-    _nearest(geometries, handleConatainerPoint) {
+    _nearest(geometries, handleConatainerPoint, currentGeometry) {
         // geometries = this._sortGeometries(geometries, handleConatainerPoint);
         let point;
         for (let i = 0, len = geometries.length; i < len; i++) {
-            if (geometries[i] === this.geometry) {
+            const geometry = geometries[i];
+            if (geometry === currentGeometry) {
                 continue;
             }
             point = this._nearestGeometry(geometries[i], handleConatainerPoint);

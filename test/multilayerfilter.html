@@ -47,7 +47,7 @@
                 vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
                 newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
             });
-            snap.setGeometry(editGeo);
+            snap.effectGeometry(editGeo);
         });
 
         const layer1 = new maptalks.VectorLayer('layer1').addTo(map);

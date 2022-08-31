@@ -47,65 +47,18 @@
                 vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
                 newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
             });
-            snap.setGeometry(editGeo);
+            snap.effectGeometry(editGeo);
+            const lineString = geos.filter(geo => {
+                return geo.getType() === 'LineString';
+            })[0];
+            if (lineString) {
+                lineString.startEdit({
+                    vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
+                    newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
+                });
+                snap.effectGeometry(lineString);
+            }
         });
-
-        // var drawTool = new maptalks.DrawTool({
-        //     mode: 'LineString',
-        //     'symbol': drawSymbol,
-        // }).addTo(map).disable();
-
-        // drawTool.on('drawend', function (param) {
-        //     // console.log(param.geometry);
-        //     layer.addGeometry(param.geometry);
-        // });
-        // drawTool.on('drawstart', function (param) {
-        //     console.log('reset geometry');
-        //     adsorption.setGeometry(param.tempGeometry);
-        //     adsorption.config({
-        //         fiterGeometries: () => {
-        //             return layer.getGeometries();
-        //         }
-        //     })
-        // });
-
-        // drawTool.on('mousemove', function (e) {
-        //     // console.log(e);
-        // })
-
-        // var items = ['LineString', 'Polygon'].map(function (value) {
-        //     return {
-        //         item: value,
-        //         click: function () {
-        //             drawTool.setMode(value).enable();
-        //         }
-        //     };
-        // });
-
-        // var toolbar = new maptalks.control.Toolbar({
-        //     items: [
-        //         {
-        //             item: 'Shape',
-        //             children: items
-        //         },
-        //         {
-        //             item: 'Disable',
-        //             click: function () {
-        //                 drawTool.disable();
-        //             }
-        //         },
-        //         {
-        //             item: 'Clear',
-        //             click: function () {
-        //                 layer.clear();
-        //             }
-        //         }
-        //     ]
-        // }).addTo(map);
-
-
-   
-
     </script>
 </body>
 

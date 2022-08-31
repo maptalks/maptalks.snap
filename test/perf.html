@@ -52,7 +52,7 @@
             vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
             newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
         });
-        snap.setGeometry(editGeo);
+        snap.effectGeometry(editGeo);
         snap.config({
             tolerance: 15,
             fiterGeometries: () => {

@@ -53,7 +53,7 @@
         });
         drawTool.on('drawstart', function (param) {
             console.log('reset geometry');
-            snap.setGeometry(param.tempGeometry);
+            snap.effectGeometry(param.tempGeometry);
             snap.config({
                 fiterGeometries: () => {
                     return layer.getGeometries();
