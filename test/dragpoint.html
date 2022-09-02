@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map - Display a map</title>
+<style type="text/css">
+    html,
+    body {
+        margin: 0px;
+        height: 100%;
+        width: 100%
+    }
+
+    .container {
+        width: 100%;
+        height: 100%
+    }
+
+    .message {
+        background-color: black;
+        color: white;
+    }
+</style>
+<link rel="stylesheet" href="https://unpkg.com/maptalks/dist/maptalks.css">
+<script type="text/javascript" src="https://unpkg.com/maptalks/dist/maptalks.min.js"></script>
+<script src="https://unpkg.com/maptalks.snap/dist/maptalks.snap.js"></script>
+<script type="text/javascript" src="https://unpkg.com/gcoord@0.3.2/dist/gcoord.js"></script>
+
+<body>
+    <div class="message">
+        try drag blue line point
+    </div>
+    <div id="map" class="container"></div>
+    <script src="./base.js"></script>
+    <script>
+
+
+
+        fetch('./data.geojson').then(res => res.json()).then(geojson => {
+            const geos = maptalks.GeoJSON.toGeometry(geojson, function (geo) {
+                if (geo instanceof maptalks.Marker || geo instanceof maptalks.MultiPoint) {
+                    geo.setSymbol(markerSymbol);
+                }
+                if (geo instanceof maptalks.LineString || geo instanceof maptalks.MultiLineString) {
+                    geo.setSymbol(lineSymbol);
+                }
+                if (geo instanceof maptalks.Polygon || geo instanceof maptalks.MultiPolygon) {
+                    geo.setSymbol(fillSymbol);
+                }
+            });
+            layer.addGeometry(geos);
+
+            const point = new maptalks.Marker([116.47525000842484, 40.002325457451406], {
+                symbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
+                draggable: true,
+                // dragShadow: false
+            });
+            layer.addGeometry(point);
+            snap.effectGeometry(point);
+            point.on('dragging dragend', e => {
+                if (point.snapTo) {
+                    const containerPoint = point.snapTo(e.containerPoint);
+                    const coordinate = map.containerPointToCoord(containerPoint);
+                    point.setCoordinates(coordinate);
+                }
+            })
+        });
+    </script>
+</body>
+
+</html>
