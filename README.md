@@ -1,7 +1,7 @@
 # maptalks.snap
 
 maptalks snap plugin  
-**[maptalks.js](https://github.com/maptalks/maptalks.js) version required >= `1.0.0-rc.11` **
+**[maptalks.js](https://github.com/maptalks/maptalks.js) version required >= `1.0.0-rc.11`**
 
 ## Features
 
