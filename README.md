@@ -1,7 +1,8 @@
 # maptalks.snap
 
 maptalks snap plugin  
-**[maptalks.js](https://github.com/maptalks/maptalks.js) version required >=`1.0.0-rc.11`**
+**[maptalks.js](https://github.com/maptalks/maptalks.js) version required >= `1.0.0-rc.11`**
+
 ## Features
 
 * Support Geometry Edit/Draw
@@ -35,6 +36,12 @@ maptalks snap plugin
 
 #### constructor(map, options)
 
+ - map
+ - options
+   - {Number} tolerance `snapTo threshold`
+
+   - {Function } fiterGeometries `filter geometries for snap collision. If it is empty, all geometries on the layer where the geometry is located will be obtained`
+
 ```js
 import {
     Snap
@@ -42,7 +49,7 @@ import {
 const snap = new Snap(map, {
     //snapTo threshold
     tolerance: 15,
-    // filter geometries for snap reference object
+    // filter geometries for snap collision
     fiterGeometries: function() {
         //you can return geometries for snap collision
         return layer.geometries().filter(geo => {
@@ -55,7 +62,7 @@ const snap = new Snap(map, {
 // const snap = new maptalks.Snap(map, {
 //     //snapTo threshold
 //     tolerance: 15,
-//     // filter geometries for get Adsorption reference object
+//     // filter geometries for snap collision
 //     fiterGeometries: function() {
 //         //you can return geometries for snap collision
 //         return layer.geometries().filter(geo => {
@@ -63,7 +70,7 @@ const snap = new Snap(map, {
 //         })
 //     }
 // });
-
+snap.effectGeometry(polygon);
 //update options
 snap.config({
     tolerance: 18,
