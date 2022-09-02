@@ -42,22 +42,22 @@ export default [
             }
         }
     },
-    // {
-    //     input: getEntry(),
-    //     external: external,
-    //     plugins: plugins,
-    //     output: {
-    //         'sourcemap': false,
-    //         'format': 'es',
-    //         // banner,
-    //         'file': `dist/${FILEMANE}.es.js`,
-    //         'extend': true,
-    //         'banner': banner,
-    //         'globals': {
-    //             'maptalks': 'maptalks'
-    //         }
-    //     }
-    // },
+    {
+        input: getEntry(),
+        external: external,
+        plugins: plugins,
+        output: {
+            'sourcemap': false,
+            'format': 'es',
+            // banner,
+            'file': `dist/${FILEMANE}.mjs`,
+            'extend': true,
+            'banner': banner,
+            'globals': {
+                'maptalks': 'maptalks'
+            }
+        }
+    },
     {
         input: getEntry(),
         external: external,

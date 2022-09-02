@@ -1,6 +1,6 @@
 {
   "name": "maptalks.snap",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "",
   "module": "./index.js",
   "main": "dist/maptalks.snap.js",
