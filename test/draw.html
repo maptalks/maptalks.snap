@@ -52,6 +52,7 @@
         const layer1 = new maptalks.VectorLayer('layer1').addTo(map);
 
         var drawTool = new maptalks.DrawTool({
+            once: true,
             mode: 'LineString',
             'symbol': drawSymbol,
         }).addTo(map).disable();
@@ -70,7 +71,7 @@
             })
         });
 
-        var items = ['LineString', 'Polygon'].map(function (value) {
+        var items = ['LineString', 'Polygon', 'Point'].map(function (value) {
             return {
                 item: value,
                 click: function () {
