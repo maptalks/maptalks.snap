@@ -31,7 +31,7 @@ maptalks snap plugin
  [custom filtergeometries](https://maptalks.github.io/maptalks.snap/test/filtergeometries.html)<br>
  [filtergeometries from multi layers](https://maptalks.github.io/maptalks.snap/test/multilayerfilter.html)<br>
  [perf test](https://maptalks.github.io/maptalks.snap/test/perf.html)  
- [draw point](https://maptalks.github.io/maptalks.snap/test/drawpoint.html)  
+ <!-- [draw point](https://maptalks.github.io/maptalks.snap/test/drawpoint.html)   -->
  [drag point](https://maptalks.github.io/maptalks.snap/test/dragpoint.html)
 
  ## API
