@@ -1,7 +1,7 @@
 # maptalks.snap
 
 maptalks snap plugin  
-**[maptalks.js](https://github.com/maptalks/maptalks.js) version required >= `1.0.0-rc.11`**
+[maptalks.js](https://github.com/maptalks/maptalks.js) version required >= `1.0.0-rc.11`
 
 ## Features
 
@@ -30,7 +30,8 @@ maptalks snap plugin
  [draw](https://maptalks.github.io/maptalks.snap/test/draw.html)<br>
  [custom filtergeometries](https://maptalks.github.io/maptalks.snap/test/filtergeometries.html)<br>
  [filtergeometries from multi layers](https://maptalks.github.io/maptalks.snap/test/multilayerfilter.html)<br>
- [perf test](https://maptalks.github.io/maptalks.snap/test/perf.html)
+ [perf test](https://maptalks.github.io/maptalks.snap/test/perf.html)  
+ [drag point](https://maptalks.github.io/maptalks.snap/test/dragpoint.html)
 
  ## API
 
