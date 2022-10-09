@@ -55,6 +55,7 @@
         var drawTool = new ExtendDrawTool({
             mode: 'LineString',
             'symbol': drawSymbol,
+            edgeAutoComplete: false
         }).addTo(map).disable();
 
         drawTool.on('drawend', function (param) {
@@ -70,6 +71,9 @@
                 }
             })
         });
+        drawTool.on('mousemove', function (e) {
+            drawTool.config({ edgeAutoComplete: e.domEvent.ctrlKey })
+        })
 
         var items = ['LineString', 'Polygon'].map(function (value) {
             return {

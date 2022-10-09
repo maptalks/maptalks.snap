@@ -26,7 +26,7 @@ class ExtendDrawTool extends maptalks.DrawTool {
             if (snapTo && isFunction(snapTo)) {
                 let containerPoint = event.containerPoint;
                 const lastContainerPoints = [];
-                if (event.domEvent.ctrlKey) {
+                if (this.options.edgeAutoComplete) {
                     const lastCoord = this._clickCoords[(this._historyPointer || 1) - 1];
                     lastContainerPoints.push(map._prjToContainerPoint(lastCoord));
                     const beforeLastCoord = this._clickCoords[(this._historyPointer || 1) - 2];
@@ -50,6 +50,10 @@ class ExtendDrawTool extends maptalks.DrawTool {
             this._historyPointer = this._clickCoords.length;
             event.drawTool = this;
             registerMode['update'](this.getMap().getProjection(), this._clickCoords, this._geometry, event);
+            if (this.getMode() === 'point') {
+                this.endDraw(event);
+                return;
+            }
             /**
              * drawvertex event.
              *
@@ -83,7 +87,11 @@ class ExtendDrawTool extends maptalks.DrawTool {
      */
     _mouseMoveHandler(event) {
         const map = this.getMap();
-        if (!this._geometry || !map || map.isInteracting()) {
+        if (!map || map.isInteracting()) {
+            return;
+        }
+        if (this.getMode() === 'point' && !this._geometry) {
+            this._createGeometry(event);
             return;
         }
         let containerPoint = this._getMouseContainerPoint(event);
@@ -96,7 +104,7 @@ class ExtendDrawTool extends maptalks.DrawTool {
         const snapTo = this._geometry.snapTo;
         if (snapTo && isFunction(snapTo)) {
             const lastContainerPoints = [];
-            if (event.domEvent.ctrlKey) {
+            if (this.options.edgeAutoComplete) {
                 const lastCoord = this._clickCoords[(this._historyPointer || 1) - 1];
                 lastContainerPoints.push(map._prjToContainerPoint(lastCoord));
                 const beforeLastCoord = this._clickCoords[(this._historyPointer || 1) - 2];

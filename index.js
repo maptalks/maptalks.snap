@@ -74,6 +74,49 @@ function ringBBOX(ring, map, tolerance) {
     return TEMP_EXTENT;
 }
 
+// 确定点是否在线段上
+function pointOnLine (point, startPoint, endPoint) {
+    const x = point.x;
+    const y = point.y;
+    const x1 = startPoint.x;
+    const y1 = startPoint.y;
+    const x2 = endPoint.x;
+    const y2 = endPoint.y;
+    const dxc = x - x1;
+    const dyc = y - y1;
+    const dxl = x2 - x1;
+    const dyl = y2 - y1;
+    const cross = dxc * dyl - dyc * dxl;
+    if (Math.abs(cross) > 0.1) {
+        return;
+    }
+    if (Math.abs(dxl) >= Math.abs(dyl)) {
+        if (dxl > 0 ? x1 < x && x < x2 : x2 < x && x < x1) {
+        return true;
+        }
+    } else if (dyl > 0 ? y1 < y && y < y2 : y2 < y && y < y1) {
+        return true;
+    }
+}
+
+// 确定点是否在环上，返回所在线段的 index 值
+function pointOnRing (ring, point) {
+    if (!point) {
+        return;
+    }
+    if (point.x === ring[0].x && point.y === ring[0].y) {
+        return [0, 1];
+    }
+    for (let i = 0; i < ring.length - 1; i++) {
+        if (point.x === ring[i + 1].x && point.y === ring[i + 1].y) {
+            return [i + 1, i + 2];
+        }
+        if (pointOnLine(point, ring[i], ring[i + 1])) {
+            return [i + 1, i + 1];
+        }
+    }
+}
+
 export class Snap extends maptalks.Class {
     constructor(map, options) {
         super(options);
@@ -225,47 +268,6 @@ export class Snap extends maptalks.Class {
                 POINT.y = point1.y;
             }
         };
-        // 确定点是否在线段上
-        const pointOnLine = (point, startPoint, endPoint) => {
-            const x = point.x;
-            const y = point.y;
-            const x1 = startPoint.x;
-            const y1 = startPoint.y;
-            const x2 = endPoint.x;
-            const y2 = endPoint.y;
-            const dxc = x - x1;
-            const dyc = y - y1;
-            const dxl = x2 - x1;
-            const dyl = y2 - y1;
-            const cross = dxc * dyl - dyc * dxl;
-            if (Math.abs(cross) > 0.1) {
-                return;
-            }
-            if (Math.abs(dxl) >= Math.abs(dyl)) {
-              if (dxl > 0 ? x1 < x && x < x2 : x2 < x && x < x1) {
-                return true;
-              }
-            } else if (dyl > 0 ? y1 < y && y < y2 : y2 < y && y < y1) {
-                return true;
-            }
-        };
-        // 确定点是否在环上，返回所在线段的 index 值
-        const pointOnRing = (ring, point) => {
-            if (!point) {
-                return;
-            }
-            if (point.x === ring[0].x && point.y === ring[0].y) {
-                return [0, 1];
-            }
-            for (let i = 0; i < ring.length - 1; i++) {
-                if (point.x === ring[i + 1].x && point.y === ring[i + 1].y) {
-                    return [i + 1, i + 2];
-                }
-                if (pointOnLine(point, ring[i], ring[i + 1])) {
-                    return [i + 1, i + 1];
-                }
-            }
-        };
         // 获取环上在当前点击的点和前一个点之间的所有节点
         const getEffectedVertexOnRing = (ring, oldPoints, newPoint, isRing) => {
             const [oldPoint, beforeOldPoint] = oldPoints;
@@ -283,7 +285,7 @@ export class Snap extends maptalks.Class {
             if (oldIndex[0] === newIndex[0] && oldIndex[1] === newIndex[1]) {
                 return;
             }
-            // 是多边形的环时，需要
+            // 是多边形的环时，需要跨越首尾相接的节点；是线时则只截取中间的节点
             if (isRing) {
                 let reverse = false;
                 // 使用再之前的一个点来判断自动完成的方向
