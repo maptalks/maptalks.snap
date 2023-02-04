@@ -35,6 +35,8 @@ maptalks snap plugin
 
  ## API
 
+### Snap
+
 #### constructor(map, options)
 
  - map
@@ -59,6 +61,10 @@ const snap = new Snap(map, {
     }
 });
 
+snap.on('snap', (e) => {
+    console.log(e);
+})
+
 //if you use cdn,Snap Hanging under maptalks namespace
 // const snap = new maptalks.Snap(map, {
 //     //snapTo threshold
@@ -82,7 +88,7 @@ snap.config({
 
   
 
-#### method
+#### methods
 
   + effectGeometry(geometry) ` effect geometry for snap`  
   
@@ -104,4 +110,16 @@ snap.unEffectGeometry(lineString);
 
 ```js
 snap.dispose();
+```
+
+#### events
+
+   + snap
+
+   
+
+```js
+     snap.on('snap', (e) => {
+         console.log(e);
+     })
 ```
