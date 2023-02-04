@@ -75,7 +75,7 @@ function ringBBOX(ring, map, tolerance) {
 }
 
 // 确定点是否在线段上
-function pointOnLine (point, startPoint, endPoint) {
+function pointOnLine(point, startPoint, endPoint) {
     const x = point.x;
     const y = point.y;
     const x1 = startPoint.x;
@@ -92,7 +92,7 @@ function pointOnLine (point, startPoint, endPoint) {
     }
     if (Math.abs(dxl) >= Math.abs(dyl)) {
         if (dxl > 0 ? x1 < x && x < x2 : x2 < x && x < x1) {
-        return true;
+            return true;
         }
     } else if (dyl > 0 ? y1 < y && y < y2 : y2 < y && y < y1) {
         return true;
@@ -100,7 +100,7 @@ function pointOnLine (point, startPoint, endPoint) {
 }
 
 // 确定点是否在环上，返回所在线段的 index 值
-function pointOnRing (ring, point) {
+function pointOnRing(ring, point) {
     if (!point) {
         return;
     }
@@ -117,7 +117,7 @@ function pointOnRing (ring, point) {
     }
 }
 
-export class Snap extends maptalks.Class {
+export class Snap extends maptalks.Eventable(maptalks.Class) {
     constructor(map, options) {
         super(options);
         this.map = map;
@@ -203,6 +203,15 @@ export class Snap extends maptalks.Class {
         return this._mousePoint && this._mousePoint.copy();
     }
 
+    _fireSnapEvent(point, geometry) {
+        this.fire('snap', {
+            containerPoint: point.copy(),
+            geometry,
+            coordinate: this.map.containerPointToCoord(point)
+        });
+        return this;
+    }
+
     _nearestGeometry(geometry, handleConatainerPoint, lastContainerPoints) {
         // multi geometry
         if (geometry.getGeometries) {
@@ -210,6 +219,7 @@ export class Snap extends maptalks.Class {
             for (let i = 0, len = geometries.length; i < len; i++) {
                 const point = this._nearestGeometry(geometries[i], handleConatainerPoint, lastContainerPoints);
                 if (point) {
+                    this._fireSnapEvent(point, geometry);
                     return point;
                 }
             }
@@ -224,6 +234,7 @@ export class Snap extends maptalks.Class {
         if (geometry instanceof maptalks.Marker) {
             const point = coordinateToContainerPoint(coordinates, this.map, TEMP_POINT);
             if (isNearest(point)) {
+                this._fireSnapEvent(point, geometry);
                 return point.copy();
             }
             return;
@@ -324,9 +335,11 @@ export class Snap extends maptalks.Class {
                 if (lastContainerPoints && lastContainerPoints.length) {
                     const effectedVertex = getEffectedVertexOnRing(coordinates, lastContainerPoints, point);
                     if (effectedVertex && effectedVertex.length) {
+                        this._fireSnapEvent(point, geometry);
                         return { point: point.copy(), effectedVertex };
                     }
                 }
+                this._fireSnapEvent(point, geometry);
                 return point.copy();
             }
             return;
@@ -338,9 +351,11 @@ export class Snap extends maptalks.Class {
                     if (lastContainerPoints && lastContainerPoints.length) {
                         const effectedVertex = getEffectedVertexOnRing(coordinates[i], lastContainerPoints, point, true);
                         if (effectedVertex && effectedVertex.length) {
+                            this._fireSnapEvent(point, geometry);
                             return { point: point.copy(), effectedVertex };
                         }
                     }
+                    this._fireSnapEvent(point, geometry);
                     return point.copy();
                 }
             }

@@ -15,7 +15,8 @@
         width: 100%;
         height: 100%
     }
-    .message{
+
+    .message {
         background-color: black;
         color: white;
     }
@@ -27,7 +28,7 @@
 
 <body>
     <div class="message">
-       polygon,linestring snap
+        polygon,linestring snap
     </div>
     <div id="map" class="container"></div>
     <script src="./base.js"></script>
@@ -64,6 +65,9 @@
                 });
                 snap.effectGeometry(lineString);
             }
+            snap.on('snap', (e) => {
+                console.log(e);
+            })
         });
     </script>
 </body>
