@@ -54,7 +54,7 @@
         var drawTool = new maptalks.DrawTool({
             once: true,
             mode: 'LineString',
-            'symbol': drawSymbol,
+            // 'symbol': drawSymbol,
         }).addTo(map).disable();
 
         drawTool.on('drawend', function (param) {
@@ -63,6 +63,42 @@
         });
         drawTool.on('drawstart', function (param) {
             console.log('reset geometry');
+
+            const geometry = param.tempGeometry;
+            // console.log(geometry);
+            const mode = drawTool.getMode();
+            if (mode === 'linestring') {
+                geometry.setSymbol({
+                    lineColor: 'red',
+                    markerType: 'ellipse',
+                    markerWidth: 10,
+                    markerHeight: 10,
+                    'markerPlacement': 'vertex',
+                })
+            }
+            if (mode === 'polygon') {
+                geometry.setSymbol({
+                    polygonFill: "white",
+                    lineColor: 'blue',
+                    markerType: 'ellipse',
+                    markerWidth: 10,
+                    markerHeight: 10,
+                    markerFill: "red",
+                    'markerPlacement': 'vertex',
+                })
+            }
+            if (mode === 'point') {
+                geometry.setSymbol({
+                    markerFile: './poi.png'
+                    // polygonFill: "white",
+                    // lineColor: 'blue',
+                    // markerType: 'ellipse',
+                    // markerWidth: 10,
+                    // markerHeight: 10,
+                    // markerFill: "red",
+                    // 'markerPlacement': 'vertex',
+                })
+            }
             snap.effectGeometry(param.tempGeometry);
             snap.config({
                 fiterGeometries: () => {
