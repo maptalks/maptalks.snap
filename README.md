@@ -1,7 +1,8 @@
 # maptalks.snap
 
 maptalks snap plugin  
-**[maptalks.js](https://github.com/maptalks/maptalks.js) version required >=`1.0.0-rc.11`**
+[maptalks.js](https://github.com/maptalks/maptalks.js) version required >= `1.0.0-rc.11`
+
 ## Features
 
 * Support Geometry Edit/Draw
@@ -29,11 +30,20 @@ maptalks snap plugin
  [draw](https://maptalks.github.io/maptalks.snap/test/draw.html)<br>
  [custom filtergeometries](https://maptalks.github.io/maptalks.snap/test/filtergeometries.html)<br>
  [filtergeometries from multi layers](https://maptalks.github.io/maptalks.snap/test/multilayerfilter.html)<br>
- [perf test](https://maptalks.github.io/maptalks.snap/test/perf.html)
+ [perf test](https://maptalks.github.io/maptalks.snap/test/perf.html)  
+ [drag point](https://maptalks.github.io/maptalks.snap/test/dragpoint.html)
 
  ## API
 
+### Snap
+
 #### constructor(map, options)
+
+ - map
+ - options
+   - {Number} tolerance `snapTo threshold`
+
+   - {Function } fiterGeometries `filter geometries for snap collision. If it is empty, all geometries on the layer where the geometry is located will be obtained`
 
 ```js
 import {
@@ -42,7 +52,7 @@ import {
 const snap = new Snap(map, {
     //snapTo threshold
     tolerance: 15,
-    // filter geometries for snap reference object
+    // filter geometries for snap collision
     fiterGeometries: function() {
         //you can return geometries for snap collision
         return layer.geometries().filter(geo => {
@@ -51,11 +61,15 @@ const snap = new Snap(map, {
     }
 });
 
+snap.on('snap', (e) => {
+    console.log(e);
+})
+
 //if you use cdn,Snap Hanging under maptalks namespace
 // const snap = new maptalks.Snap(map, {
 //     //snapTo threshold
 //     tolerance: 15,
-//     // filter geometries for get Adsorption reference object
+//     // filter geometries for snap collision
 //     fiterGeometries: function() {
 //         //you can return geometries for snap collision
 //         return layer.geometries().filter(geo => {
@@ -63,7 +77,7 @@ const snap = new Snap(map, {
 //         })
 //     }
 // });
-
+snap.effectGeometry(polygon);
 //update options
 snap.config({
     tolerance: 18,
@@ -74,7 +88,7 @@ snap.config({
 
   
 
-#### method
+#### methods
 
   + effectGeometry(geometry) ` effect geometry for snap`  
   
@@ -96,4 +110,16 @@ snap.unEffectGeometry(lineString);
 
 ```js
 snap.dispose();
+```
+
+#### events
+
+   + snap
+
+   
+
+```js
+     snap.on('snap', (e) => {
+         console.log(e);
+     })
 ```

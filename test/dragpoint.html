@@ -28,12 +28,14 @@
 
 <body>
     <div class="message">
-        polygon,linestring snap
+        try drag blue line point
     </div>
     <div id="map" class="container"></div>
     <script src="./base.js"></script>
     <script>
-        let editGeo;
+
+
+
         fetch('./data.geojson').then(res => res.json()).then(geojson => {
             const geos = maptalks.GeoJSON.toGeometry(geojson, function (geo) {
                 if (geo instanceof maptalks.Marker || geo instanceof maptalks.MultiPoint) {
@@ -47,26 +49,20 @@
                 }
             });
             layer.addGeometry(geos);
-            editGeo = geos.filter(geo => {
-                return geo.getProperties().name.includes('编辑');
-            })[0];
-            editGeo.startEdit({
-                vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
-                newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
+
+            const point = new maptalks.Marker([116.47525000842484, 40.002325457451406], {
+                symbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
+                draggable: true,
+                // dragShadow: false
             });
-            snap.effectGeometry(editGeo);
-            const lineString = geos.filter(geo => {
-                return geo.getType() === 'LineString';
-            })[0];
-            if (lineString) {
-                lineString.startEdit({
-                    vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
-                    newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
-                });
-                snap.effectGeometry(lineString);
-            }
-            snap.on('snap', (e) => {
-                console.log(e);
+            layer.addGeometry(point);
+            snap.effectGeometry(point);
+            point.on('dragging dragend', e => {
+                if (point.snapTo) {
+                    const containerPoint = point.snapTo(e.containerPoint);
+                    const coordinate = map.containerPointToCoord(containerPoint);
+                    point.setCoordinates(coordinate);
+                }
             })
         });
     </script>

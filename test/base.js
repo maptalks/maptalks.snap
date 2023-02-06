@@ -43,7 +43,7 @@ const fillSymbol = Object.assign({}, lineSymbol, {
     lineWidth: 3
 });
 
-const drawSymbol = Object.assign({}, fillSymbol, { lineColor: 'red' });
+const drawSymbol = Object.assign({}, fillSymbol, { lineColor: 'red' }, markerSymbol, { 'markerPlacement': 'vertex', markerLineColor: 'black' });
 
 const layer = new maptalks.VectorLayer('layer').addTo(map);
 const snap = new maptalks.Snap(map);

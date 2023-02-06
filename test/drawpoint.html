@@ -8,7 +8,7 @@
     body {
         margin: 0px;
         height: 100%;
-        width: 100%
+        width: 100%  
     }
 
     .container {
@@ -28,12 +28,38 @@
 
 <body>
     <div class="message">
-        polygon,linestring snap
+        draw point (map click end)
     </div>
     <div id="map" class="container"></div>
     <script src="./base.js"></script>
     <script>
-        let editGeo;
+
+        let dataload = false;
+        let currentIndex = 0;
+        const drawPoints = [];
+        map.on('mousemove', e => {
+            if (!dataload) {
+                return;
+            }
+            if (!drawPoints[currentIndex]) {
+                drawPoints[currentIndex] = new maptalks.Marker(e.coordinate, {
+                    symbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' })
+                });
+                layer.addGeometry(drawPoints[currentIndex]);
+                snap.effectGeometry(drawPoints[currentIndex]);
+            } else if (drawPoints[currentIndex].snapTo) {
+                const containerPoint = drawPoints[currentIndex].snapTo(e.containerPoint);
+                const coordinate = map.containerPointToCoord(containerPoint);
+                drawPoints[currentIndex].setCoordinates(coordinate);
+            }
+        });
+
+        map.on('click', e => {
+            snap.unEffectGeometry(drawPoints[currentIndex]);
+            drawPoints[currentIndex].setSymbol(markerSymbol);
+            currentIndex++;
+        })
+
         fetch('./data.geojson').then(res => res.json()).then(geojson => {
             const geos = maptalks.GeoJSON.toGeometry(geojson, function (geo) {
                 if (geo instanceof maptalks.Marker || geo instanceof maptalks.MultiPoint) {
@@ -47,27 +73,7 @@
                 }
             });
             layer.addGeometry(geos);
-            editGeo = geos.filter(geo => {
-                return geo.getProperties().name.includes('编辑');
-            })[0];
-            editGeo.startEdit({
-                vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
-                newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
-            });
-            snap.effectGeometry(editGeo);
-            const lineString = geos.filter(geo => {
-                return geo.getType() === 'LineString';
-            })[0];
-            if (lineString) {
-                lineString.startEdit({
-                    vertexHandleSymbol: Object.assign({}, markerSymbol, { markerLineColor: '#1791FC' }),
-                    newVertexHandleSymbol: Object.assign({}, markerSymbol, { markerFill: '#1791FC', markerLineColor: "#fff" })
-                });
-                snap.effectGeometry(lineString);
-            }
-            snap.on('snap', (e) => {
-                console.log(e);
-            })
+            dataload = true;
         });
     </script>
 </body>

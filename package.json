@@ -1,6 +1,6 @@
 {
   "name": "maptalks.snap",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "",
   "module": "./index.js",
   "main": "dist/maptalks.snap.js",
@@ -11,16 +11,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deyihu/maptalks-adsorbent.git"
+    "url": "https://github.com/maptalks/maptalks.snap.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/deyihu/maptalks-adsorbent/issues"
+    "url": "https://github.com/maptalks/maptalks.snap/issues"
   },
-  "homepage": "https://github.com/deyihu/maptalks-adsorbent#readme",
+  "homepage": "https://github.com/maptalks/maptalks.snap#readme",
   "devDependencies": {
-    "maptalks":"1.0.0-rc.10",
+    "maptalks":"1.0.0-rc.11",
     "cross-env": "^5.1.4",
     "eslint": "^6.2.2",
     "eslint-config-standard": "^14.1.0",
