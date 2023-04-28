@@ -101,7 +101,7 @@
             }
             snap.effectGeometry(param.tempGeometry);
             snap.config({
-                fiterGeometries: () => {
+                filterGeometries: () => {
                     return layer.getGeometries().concat(layer1.getGeometries());
                 }
             })
