@@ -4,7 +4,7 @@ const options = {
     // snapTo threshold
     tolerance: 15,
     // filter geometries for get Adsorption reference object
-    fiterGeometries: null
+    filterGeometries: null
 };
 
 const TEMP_POINT = new maptalks.Point(0, 0);
@@ -147,9 +147,9 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
                 return;
             }
             let geometries;
-            const fiterGeometries = self.options.fiterGeometries;
-            if (fiterGeometries && maptalks.Util.isFunction(fiterGeometries)) {
-                geometries = fiterGeometries();
+            const filterGeometries = self.options.filterGeometries || self.options.fiterGeometries;
+            if (filterGeometries && maptalks.Util.isFunction(filterGeometries)) {
+                geometries = filterGeometries();
             }
             if (!geometries || !geometries.length) {
                 const layer = this.getLayer();
