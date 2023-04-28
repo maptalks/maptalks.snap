@@ -58,7 +58,7 @@
         });
         snap.config({
             tolerance: 15,
-            fiterGeometries: () => {
+            filterGeometries: () => {
                 return layer.getGeometries().filter(geo => {
                     return geo.getType().includes('LineString');
                 })

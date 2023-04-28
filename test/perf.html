@@ -62,7 +62,7 @@
         snap.effectGeometry(editGeo);
         snap.config({
             tolerance: 15,
-            fiterGeometries: () => {
+            filterGeometries: () => {
                 return polygonLayer.getGeometries();
             }
         })

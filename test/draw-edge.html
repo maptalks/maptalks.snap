@@ -23,14 +23,15 @@
 </style>
 <link rel="stylesheet" href="https://unpkg.com/maptalks/dist/maptalks.css">
 <script type="text/javascript" src="https://unpkg.com/maptalks/dist/maptalks.min.js"></script>
-<script src="https://unpkg.com/maptalks.snap/dist/maptalks.snap.js"></script>
+<script src="../dist/maptalks.snap.js"></script>
 <script type="text/javascript" src="https://unpkg.com/gcoord@0.3.2/dist/gcoord.js"></script>
 
 <body>
     <div class="message">
-        draw tempGeometry snap
+        press ctrl to autocomplete edge
     </div>
     <div id="map" class="container"></div>
+    <script src="./drawTool.js"></script>
     <script src="./base.js"></script>
     <script>
         let editGeo;
@@ -51,10 +52,10 @@
 
         const layer1 = new maptalks.VectorLayer('layer1').addTo(map);
 
-        var drawTool = new maptalks.DrawTool({
-            once: true,
+        var drawTool = new ExtendDrawTool({
             mode: 'LineString',
-            // 'symbol': drawSymbol,
+            'symbol': drawSymbol,
+            edgeAutoComplete: false
         }).addTo(map).disable();
 
         drawTool.on('drawend', function (param) {
@@ -63,42 +64,6 @@
         });
         drawTool.on('drawstart', function (param) {
             console.log('reset geometry');
-
-            const geometry = param.tempGeometry;
-            // console.log(geometry);
-            const mode = drawTool.getMode();
-            if (mode === 'linestring') {
-                geometry.setSymbol({
-                    lineColor: 'red',
-                    markerType: 'ellipse',
-                    markerWidth: 10,
-                    markerHeight: 10,
-                    'markerPlacement': 'vertex',
-                })
-            }
-            if (mode === 'polygon') {
-                geometry.setSymbol({
-                    polygonFill: "white",
-                    lineColor: 'blue',
-                    markerType: 'ellipse',
-                    markerWidth: 10,
-                    markerHeight: 10,
-                    markerFill: "red",
-                    'markerPlacement': 'vertex',
-                })
-            }
-            if (mode === 'point') {
-                geometry.setSymbol({
-                    markerFile: './poi.png'
-                    // polygonFill: "white",
-                    // lineColor: 'blue',
-                    // markerType: 'ellipse',
-                    // markerWidth: 10,
-                    // markerHeight: 10,
-                    // markerFill: "red",
-                    // 'markerPlacement': 'vertex',
-                })
-            }
             snap.effectGeometry(param.tempGeometry);
             snap.config({
                 filterGeometries: () => {
@@ -106,8 +71,11 @@
                 }
             })
         });
+        drawTool.on('mousemove', function (e) {
+            drawTool.config({ edgeAutoComplete: e.domEvent.ctrlKey })
+        })
 
-        var items = ['LineString', 'Polygon', 'Point'].map(function (value) {
+        var items = ['LineString', 'Polygon'].map(function (value) {
             return {
                 item: value,
                 click: function () {

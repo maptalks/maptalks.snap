@@ -4,7 +4,7 @@ const options = {
     // snapTo threshold
     tolerance: 15,
     // filter geometries for get Adsorption reference object
-    fiterGeometries: null
+    filterGeometries: null
 };
 
 const TEMP_POINT = new maptalks.Point(0, 0);
@@ -74,7 +74,50 @@ function ringBBOX(ring, map, tolerance) {
     return TEMP_EXTENT;
 }
 
-export class Snap extends maptalks.Class {
+// 确定点是否在线段上
+function pointOnLine(point, startPoint, endPoint) {
+    const x = point.x;
+    const y = point.y;
+    const x1 = startPoint.x;
+    const y1 = startPoint.y;
+    const x2 = endPoint.x;
+    const y2 = endPoint.y;
+    const dxc = x - x1;
+    const dyc = y - y1;
+    const dxl = x2 - x1;
+    const dyl = y2 - y1;
+    const cross = dxc * dyl - dyc * dxl;
+    if (Math.abs(cross) > 0.1) {
+        return;
+    }
+    if (Math.abs(dxl) >= Math.abs(dyl)) {
+        if (dxl > 0 ? x1 < x && x < x2 : x2 < x && x < x1) {
+            return true;
+        }
+    } else if (dyl > 0 ? y1 < y && y < y2 : y2 < y && y < y1) {
+        return true;
+    }
+}
+
+// 确定点是否在环上，返回所在线段的 index 值
+function pointOnRing(ring, point) {
+    if (!point) {
+        return;
+    }
+    if (point.x === ring[0].x && point.y === ring[0].y) {
+        return [0, 1];
+    }
+    for (let i = 0; i < ring.length - 1; i++) {
+        if (point.x === ring[i + 1].x && point.y === ring[i + 1].y) {
+            return [i + 1, i + 2];
+        }
+        if (pointOnLine(point, ring[i], ring[i + 1])) {
+            return [i + 1, i + 1];
+        }
+    }
+}
+
+export class Snap extends maptalks.Eventable(maptalks.Class) {
     constructor(map, options) {
         super(options);
         this.map = map;
@@ -99,14 +142,14 @@ export class Snap extends maptalks.Class {
         this._geometries.push(geometry);
         const self = this;
 
-        const snapTo = function (handleConatainerPoint) {
+        const snapTo = function (handleConatainerPoint, lastContainerPoints) {
             if (!handleConatainerPoint) {
                 return;
             }
             let geometries;
-            const fiterGeometries = self.options.fiterGeometries;
-            if (fiterGeometries && maptalks.Util.isFunction(fiterGeometries)) {
-                geometries = fiterGeometries();
+            const filterGeometries = self.options.filterGeometries || self.options.fiterGeometries;
+            if (filterGeometries && maptalks.Util.isFunction(filterGeometries)) {
+                geometries = filterGeometries();
             }
             if (!geometries || !geometries.length) {
                 const layer = this.getLayer();
@@ -114,7 +157,7 @@ export class Snap extends maptalks.Class {
                     geometries = layer.getGeometries();
                 }
             }
-            return self._nearest(geometries, handleConatainerPoint, this);
+            return self._nearest(geometries, handleConatainerPoint, this, lastContainerPoints);
         };
         // bind adsort function
         geometry.snapTo = snapTo;
@@ -141,7 +184,7 @@ export class Snap extends maptalks.Class {
         delete this._geometries;
     }
 
-    _nearest(geometries, handleConatainerPoint, currentGeometry) {
+    _nearest(geometries, handleConatainerPoint, currentGeometry, lastContainerPoints) {
         // geometries = this._sortGeometries(geometries, handleConatainerPoint);
         let point;
         for (let i = 0, len = geometries.length; i < len; i++) {
@@ -149,7 +192,7 @@ export class Snap extends maptalks.Class {
             if (geometry === currentGeometry) {
                 continue;
             }
-            point = this._nearestGeometry(geometries[i], handleConatainerPoint);
+            point = this._nearestGeometry(geometries[i], handleConatainerPoint, lastContainerPoints);
             if (point) {
                 break;
             }
@@ -160,13 +203,23 @@ export class Snap extends maptalks.Class {
         return this._mousePoint && this._mousePoint.copy();
     }
 
-    _nearestGeometry(geometry, handleConatainerPoint) {
+    _fireSnapEvent(point, geometry) {
+        this.fire('snap', {
+            containerPoint: point.copy(),
+            geometry,
+            coordinate: this.map.containerPointToCoord(point)
+        });
+        return this;
+    }
+
+    _nearestGeometry(geometry, handleConatainerPoint, lastContainerPoints) {
         // multi geometry
         if (geometry.getGeometries) {
             const geometries = geometry.getGeometries();
             for (let i = 0, len = geometries.length; i < len; i++) {
-                const point = this._nearestGeometry(geometries[i], handleConatainerPoint);
+                const point = this._nearestGeometry(geometries[i], handleConatainerPoint, lastContainerPoints);
                 if (point) {
+                    this._fireSnapEvent(point, geometry);
                     return point;
                 }
             }
@@ -181,6 +234,7 @@ export class Snap extends maptalks.Class {
         if (geometry instanceof maptalks.Marker) {
             const point = coordinateToContainerPoint(coordinates, this.map, TEMP_POINT);
             if (isNearest(point)) {
+                this._fireSnapEvent(point, geometry);
                 return point.copy();
             }
             return;
@@ -225,9 +279,67 @@ export class Snap extends maptalks.Class {
                 POINT.y = point1.y;
             }
         };
+        // 获取环上在当前点击的点和前一个点之间的所有节点
+        const getEffectedVertexOnRing = (ring, oldPoints, newPoint, isRing) => {
+            const [oldPoint, beforeOldPoint] = oldPoints;
+            // 这里已经通过 nearestRing 校验过了环坐标的正确性，不需要再校验一次
+            const ringPoints = ring.map(point => coordinateToContainerPoint(point, map));
+            const oldIndex = pointOnRing(ringPoints, oldPoint);
+            if (!oldIndex) {
+                return;
+            }
+            const newIndex = pointOnRing(ringPoints, newPoint);
+            if (!newIndex) {
+                console.log('seems something wrong');
+                return;
+            }
+            if (oldIndex[0] === newIndex[0] && oldIndex[1] === newIndex[1]) {
+                return;
+            }
+            // 是多边形的环时，需要跨越首尾相接的节点；是线时则只截取中间的节点
+            if (isRing) {
+                let reverse = false;
+                // 使用再之前的一个点来判断自动完成的方向
+                const beforeOldIndex = pointOnRing(ringPoints, beforeOldPoint);
+                if (beforeOldIndex) {
+                    if (beforeOldIndex[0] > oldIndex[0] || beforeOldIndex[1] > oldIndex[1]) {
+                        reverse = true;
+                    } else if (beforeOldIndex[0] === oldIndex[0] && beforeOldIndex[1] === oldIndex[1] && pointOnLine(beforeOldPoint, oldPoint, ringPoints[oldIndex[0]])) {
+                        // 特殊情况，当两个点在同一线段上时，需要再单独计算一次位置
+                        reverse = true;
+                    }
+                }
+                if (oldIndex[0] < newIndex[0] || oldIndex[1] < newIndex[1]) {
+                    if (reverse) {
+                        return ringPoints.slice(1, oldIndex[1]).reverse().concat(ringPoints.slice(newIndex[1]).reverse());
+                    } else {
+                        return ringPoints.slice(oldIndex[1], newIndex[0]);
+                    }
+                } else {
+                    if (reverse) {
+                        return ringPoints.slice(newIndex[1], oldIndex[0]).reverse();
+                    } else {
+                        return ringPoints.slice(oldIndex[1]).concat(ringPoints.slice(1, newIndex[1]));
+                    }
+                }
+            }
+            if (oldIndex[0] < newIndex[0] || oldIndex[1] < newIndex[1]) {
+                return ringPoints.slice(oldIndex[1], newIndex[0]);
+            } else {
+                return ringPoints.slice(newIndex[1], oldIndex[0]).reverse();
+            }
+        };
         if (geometry instanceof maptalks.LineString) {
             const point = nearestRing(coordinates);
             if (point) {
+                if (lastContainerPoints && lastContainerPoints.length) {
+                    const effectedVertex = getEffectedVertexOnRing(coordinates, lastContainerPoints, point);
+                    if (effectedVertex && effectedVertex.length) {
+                        this._fireSnapEvent(point, geometry);
+                        return { point: point.copy(), effectedVertex };
+                    }
+                }
+                this._fireSnapEvent(point, geometry);
                 return point.copy();
             }
             return;
@@ -236,6 +348,14 @@ export class Snap extends maptalks.Class {
             for (let i = 0, len = coordinates.length; i < len; i++) {
                 const point = nearestRing(coordinates[i]);
                 if (point) {
+                    if (lastContainerPoints && lastContainerPoints.length) {
+                        const effectedVertex = getEffectedVertexOnRing(coordinates[i], lastContainerPoints, point, true);
+                        if (effectedVertex && effectedVertex.length) {
+                            this._fireSnapEvent(point, geometry);
+                            return { point: point.copy(), effectedVertex };
+                        }
+                    }
+                    this._fireSnapEvent(point, geometry);
                     return point.copy();
                 }
             }
