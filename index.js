@@ -192,9 +192,23 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
             if (geometry === currentGeometry) {
                 continue;
             }
-            point = this._nearestGeometry(geometries[i], handleConatainerPoint, lastContainerPoints);
-            if (point) {
-                break;
+            if (lastContainerPoints && lastContainerPoints.length) {
+                const nearestGeometry = this._nearestGeometry(geometries[i], handleConatainerPoint, lastContainerPoints);
+                // 在自动完成中间点模式下，第一个筛选到的元素可能不是上一个选中的点所在的元素
+                // 需要等到出现第一个可以补充中间点的元素出现，或者所有元素都无法补完时再返回结果
+                if (nearestGeometry) {
+                    if (nearestGeometry.effectedVertex) {
+                        point = nearestGeometry;
+                        break;
+                    } else if (!point) {
+                        point = nearestGeometry;
+                    }
+                }
+            } else {
+                point = this._nearestGeometry(geometries[i], handleConatainerPoint, lastContainerPoints);
+                if (point) {
+                    break;
+                }
             }
         }
         if (point) {
