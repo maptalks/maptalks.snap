@@ -204,6 +204,7 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
     }
 
     _fireSnapEvent(point, geometry) {
+        point = point.point || point;
         this.fire('snap', {
             containerPoint: point.copy(),
             geometry,
