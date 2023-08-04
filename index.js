@@ -334,7 +334,7 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
                     if (reverse) {
                         return ringPoints.slice(newIndex[1], oldIndex[0]).reverse();
                     } else {
-                        return ringPoints.slice(oldIndex[1]).concat(ringPoints.slice(1, newIndex[1]));
+                        return ringPoints.slice(oldIndex[1], -1).concat(ringPoints.slice(0, newIndex[0]));
                     }
                 }
             }
