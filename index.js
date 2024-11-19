@@ -161,6 +161,13 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
         };
         // bind adsort function
         geometry.snapTo = snapTo;
+        if (geometry.getGeometries) {
+            const children = geometry.getGeometries();
+            children.forEach(child => {
+                child.snapTo = snapTo;
+            });
+
+        }
         return this;
     }
 
@@ -171,6 +178,13 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
         }
         this._geometries.splice(index, 1);
         delete geometry.snapTo;
+        if (geometry.getGeometries) {
+            const children = geometry.getGeometries();
+            children.forEach(child => {
+                delete child.snapTo;
+            });
+
+        }
         return this;
     }
 
@@ -189,7 +203,7 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
         let point;
         for (let i = 0, len = geometries.length; i < len; i++) {
             const geometry = geometries[i];
-            if (geometry === currentGeometry) {
+            if (geometry === currentGeometry || (currentGeometry._parent && currentGeometry._parent === geometry)) {
                 continue;
             }
             if (lastContainerPoints && lastContainerPoints.length) {
