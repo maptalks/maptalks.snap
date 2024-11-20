@@ -43,7 +43,7 @@ maptalks snap plugin
  - options
    - {Number} tolerance `snapTo threshold`
 
-   - {Function } fiterGeometries `filter geometries for snap collision. If it is empty, all geometries on the layer where the geometry is located will be obtained`
+   - {Function } filterGeometries `filter geometries for snap collision. If it is empty, all geometries on the layer where the geometry is located will be obtained`
 
 ```js
 import {
@@ -53,7 +53,7 @@ const snap = new Snap(map, {
     //snapTo threshold
     tolerance: 15,
     // filter geometries for snap collision
-    fiterGeometries: function() {
+    filterGeometries: function() {
         //you can return geometries for snap collision
         return layer.geometries().filter(geo => {
             return geo instanceof maptalks.Polygon;
@@ -70,7 +70,7 @@ snap.on('snap', (e) => {
 //     //snapTo threshold
 //     tolerance: 15,
 //     // filter geometries for snap collision
-//     fiterGeometries: function() {
+//     filterGeometries: function() {
 //         //you can return geometries for snap collision
 //         return layer.geometries().filter(geo => {
 //             return geo instanceof maptalks.Polygon;

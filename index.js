@@ -4,7 +4,7 @@ const options = {
     // snapTo threshold
     tolerance: 15,
     // filter geometries for get Adsorption reference object
-    fiterGeometries: null
+    filterGeometries: null
 };
 
 const TEMP_POINT = new maptalks.Point(0, 0);
@@ -147,9 +147,9 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
                 return;
             }
             let geometries;
-            const fiterGeometries = self.options.fiterGeometries;
-            if (fiterGeometries && maptalks.Util.isFunction(fiterGeometries)) {
-                geometries = fiterGeometries();
+            const filterGeometries = self.options.filterGeometries || self.options.fiterGeometries;
+            if (filterGeometries && maptalks.Util.isFunction(filterGeometries)) {
+                geometries = filterGeometries();
             }
             if (!geometries || !geometries.length) {
                 const layer = this.getLayer();
@@ -161,6 +161,13 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
         };
         // bind adsort function
         geometry.snapTo = snapTo;
+        if (geometry.getGeometries) {
+            const children = geometry.getGeometries();
+            children.forEach(child => {
+                child.snapTo = snapTo;
+            });
+
+        }
         return this;
     }
 
@@ -171,6 +178,13 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
         }
         this._geometries.splice(index, 1);
         delete geometry.snapTo;
+        if (geometry.getGeometries) {
+            const children = geometry.getGeometries();
+            children.forEach(child => {
+                delete child.snapTo;
+            });
+
+        }
         return this;
     }
 
@@ -189,12 +203,29 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
         let point;
         for (let i = 0, len = geometries.length; i < len; i++) {
             const geometry = geometries[i];
-            if (geometry === currentGeometry) {
+            if (!geometry) {
                 continue;
             }
-            point = this._nearestGeometry(geometries[i], handleConatainerPoint, lastContainerPoints);
-            if (point) {
-                break;
+            if (geometry === currentGeometry || (currentGeometry && currentGeometry._parent && currentGeometry._parent === geometry)) {
+                continue;
+            }
+            if (lastContainerPoints && lastContainerPoints.length) {
+                const nearestGeometry = this._nearestGeometry(geometries[i], handleConatainerPoint, lastContainerPoints);
+                // 在自动完成中间点模式下，第一个筛选到的元素可能不是上一个选中的点所在的元素
+                // 需要等到出现第一个可以补充中间点的元素出现，或者所有元素都无法补完时再返回结果
+                if (nearestGeometry) {
+                    if (nearestGeometry.effectedVertex) {
+                        point = nearestGeometry;
+                        break;
+                    } else if (!point) {
+                        point = nearestGeometry;
+                    }
+                }
+            } else {
+                point = this._nearestGeometry(geometries[i], handleConatainerPoint, lastContainerPoints);
+                if (point) {
+                    break;
+                }
             }
         }
         if (point) {
@@ -204,6 +235,7 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
     }
 
     _fireSnapEvent(point, geometry) {
+        point = point.point || point;
         this.fire('snap', {
             containerPoint: point.copy(),
             geometry,
