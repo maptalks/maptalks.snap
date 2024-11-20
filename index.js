@@ -203,7 +203,10 @@ export class Snap extends maptalks.Eventable(maptalks.Class) {
         let point;
         for (let i = 0, len = geometries.length; i < len; i++) {
             const geometry = geometries[i];
-            if (geometry === currentGeometry || (currentGeometry._parent && currentGeometry._parent === geometry)) {
+            if (!geometry) {
+                continue;
+            }
+            if (geometry === currentGeometry || (currentGeometry && currentGeometry._parent && currentGeometry._parent === geometry)) {
                 continue;
             }
             if (lastContainerPoints && lastContainerPoints.length) {
