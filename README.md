@@ -13,21 +13,23 @@ maptalks snap plugin
 * NPM
 
 ```sh
+  npm i maptalks
+  # or
+  # npm i maptalks-gl
   npm i maptalks.snap
-#   or
-  yarn add maptalks.snap
 ```
 
 * CDN
 
 ```html
+<script type="text/javascript" src="https://unpkg.com/maptalks/dist/maptalks.min.js"></script>
 <script src="https://unpkg.com/maptalks.snap/dist/maptalks.snap.js"></script>
 ```
 
 ## Examples
 
- [edit](https://maptalks.github.io/maptalks.snap/test/index.html)<br>
- [draw](https://maptalks.github.io/maptalks.snap/test/draw.html)<br>
+ [edit Geometry](https://maptalks.github.io/maptalks.snap/test/index.html)<br>
+ [draw Geometry](https://maptalks.github.io/maptalks.snap/test/draw.html)<br>
  [custom filtergeometries](https://maptalks.github.io/maptalks.snap/test/filtergeometries.html)<br>
  [filtergeometries from multi layers](https://maptalks.github.io/maptalks.snap/test/multilayerfilter.html)<br>
  [perf test](https://maptalks.github.io/maptalks.snap/test/perf.html)  
